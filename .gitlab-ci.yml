@@ -1,0 +1,191 @@
+image: java:8
+
+variables:
+  MAVEN_CLI_OPTS: "-s .m2/settings.xml --batch-mode"
+  MAVEN_OPTS: "-Dmaven.repo.local=.m2/repository"
+
+cache:
+  paths:
+    - .m2/repository/
+    - target/
+    - .mvn
+    - files/
+    - src/main/resources/application.properties
+    - allure/
+
+stages:
+  - prepare
+  - build
+  - run
+  - test
+  - report
+  - deploy_staging
+
+prepare:
+  stage: prepare
+  script:
+    - if echo $CI_COMMIT_MESSAGE | grep -iqF skip; then
+    -   exit;
+    - fi
+    - APP_PROP=src/main/resources/application.properties
+    - DB_NAME_NO_PREFIX=$(awk '/spring.datasource.url/{print $NF}' $APP_PROP | awk -F'/' '{print $4}' | awk -F'?' '{print $1}')
+    - echo $DB_NAME_NO_PREFIX
+    - DB_SUFFIX=$(shuf -i 999999-9999999 -n 1)
+    - DB_NAME=$DB_NAME_NO_PREFIX'_'$DB_SUFFIX
+    # i can spin up new DB for each test run if needed
+    # - mysqladmin -u$DB_USERNAME -p$DB_PASSWORD create $DB_NAME
+    # - sed -i -e "s/$DB_NAME_NO_PREFIX/$DB_NAME/g" $APP_PROP
+    - sed -i -e "s/spring.datasource.password=password/spring.datasource.password=$DB_PASSWORD/g" $APP_PROP
+    - PWD=$(pwd)
+    - sed -i "/file.upload-dir=/c\file.upload-dir=$PWD/files/" $APP_PROP
+    - sed -i "/security.jwt.token.secret-key=/c\security.jwt.token.secret-key=$JWT_SECRET" $APP_PROP
+    - gunzip -k db_dump/cfa-*.sql.gz
+    # $DB_USERNAME and $DB_PASSWORD are environment variables stored in GitLab
+    # - mysql -u$DB_USERNAME -p$DB_PASSWORD $DB_NAME < db_dump/cfa-*.sql
+    - mysql -u$DB_USERNAME -p$DB_PASSWORD $DB_NAME_NO_PREFIX < db_dump/cfa-*.sql
+    # create upload dir structure
+    - mkdir -p files files/songs files/bible_conferences files/pastors_conferences files/sermons files/sermons/mihail_golubin files/youth_camps files/youth_conferences
+
+build:
+  stage: build
+  script:
+    # - mvn clean compile package -DskipTests=true
+    # - mvn $MAVEN_CLI_OPTS clean compile
+    # - mvn $MAVEN_CLI_OPTS spring-boot:run
+    - if echo $CI_COMMIT_MESSAGE | grep -iqF skip; then
+    -   exit;
+    - fi
+    - chmod +x mvnw
+    # - mkdir -p .mvn && cp -rv wrapper .mvn/
+    - ./mvnw clean package -DskipTests=true
+  # artifacts:
+  #   paths:
+  #     - target/cfa-api-*.jar
+  #   expire_in: 1 week
+
+run:
+  stage: run
+  script:
+    # kill cfa-api if its running
+    - if echo $CI_COMMIT_MESSAGE | grep -iqF skip; then
+    -   exit;
+    - fi
+    - if [[ "$(sudo /etc/init.d/cfa-api status)" == *"Running"* ]]; then sudo /etc/init.d/cfa-api stop && sleep 2; fi
+    # if there is a process with cfa-api.*.SNAPSHOT.jar in it, it means something is still running
+    # perhaps something was ran manually for debugging.
+    - IS_CFA_RUNNING=$(ps aux | grep '.*.cfa-api.*.SNAPSHOT.jar' | grep -v grep || true) # TODO: fails here when cfa-api is not running
+    - if [ ! -z "$IS_CFA_RUNNING" ]; then echo "There is a process with cfa-api.*.SNAPSHOT.jar is running and needs to be killed!" && exit 1; fi
+    - TARGET=$(pwd)"/target"
+    # - sudo ln -sf $TARGET/cfa-api*-SNAPSHOT.jar /etc/init.d/cfa-api
+    - if [ ! -L /etc/init.d/cfa-api ] ; then sudo ln -sf $TARGET/cfa-api*-SNAPSHOT.jar /etc/init.d/cfa-api; fi
+    - sudo chmod 500 $TARGET/cfa-api-*.jar
+    - sudo /etc/init.d/cfa-api start && sleep 10
+    - ps aux | grep '.*.cfa-api.*.SNAPSHOT.jar' | grep -v grep || true
+    - tail -n 15 /var/log/cfa-api.log
+
+test:
+  stage: test
+  script:
+    # - ls .mvn target/ files/
+    - if echo $CI_COMMIT_MESSAGE | grep -iqF skip; then
+    -   exit;
+    - fi
+    - ./mvnw test
+  artifacts:
+    expire_in: 3 month
+    reports:
+      junit:
+        - target/surefire-reports/TEST-*.xml
+        - target/failsafe-reports/TEST-*.xml
+
+report:
+  stage: report
+  script:
+    - if echo $CI_COMMIT_MESSAGE | grep -iqF skip; then
+    -   exit;
+    - fi
+    - ALLURE_VERSION=2.13.1
+    - TARGET_SUREFIRE=target/surefire-reports/
+    - if [ ! -d "allure" ]; then mkdir allure; fi
+    # kill allure server process if it exists
+    ## by default, gitlab ci runners uses set -o pipefail. this sets the exit code of a pipeline to that of the rightmost command to exit with a non-zero status, or zero if all commands of the pipeline exit successfully.
+    - PROC_ON_PORT=$(ss -l -p -n | grep 55555 || true)
+    - echo $PROC_ON_PORT
+    - if [ ! -z "$PROC_ON_PORT" ]; then PID=$(echo $PROC_ON_PORT | awk -F'=' '{print $2}' | awk -F',' '{print $1}') && echo $PID && kill -9 $PID; fi
+    # get allure cli binary
+    - |
+      if [ ! -f allure/allure-commandline-$ALLURE_VERSION.zip  ]; then
+        wget -nv -P allure/ https://repo.maven.apache.org/maven2/io/qameta/allure/allure-commandline/$ALLURE_VERSION/allure-commandline-$ALLURE_VERSION.zip \
+        && unzip -o allure/allure-commandline-$ALLURE_VERSION.zip -d allure/ \
+        && rm allure/allure-commandline-$ALLURE_VERSION.zip;
+      fi
+    # copy history for allure trends to show past results
+    # - if [ -d "allure/history" ]; then cp -rv allure/history $TARGET_SUREFIRE; fi
+    - |
+      if [ -d "allure/history" ]; then
+          echo "allure/history directory exists. copy it to $TARGET_SUREFIRE";
+          cp -rv allure/history $TARGET_SUREFIRE;
+      else
+          echo "allure/history directory does not exist";
+          if [ -d "/home/gitlab-runner/history" ]; then
+              echo "/home/gitlab-runner/history exist. copy it to $TARGET_SUREFIRE";
+              cp -rv /home/gitlab-runner/history $TARGET_SUREFIRE;
+          fi
+      fi
+    - ./allure/allure-$ALLURE_VERSION/bin/allure generate -o allure/allure-report --clean $TARGET_SUREFIRE
+    # copy history directory for future use for allure trends
+    - if [ -d "allure/allure-report/history" ]; then cp -rv allure/allure-report/history allure/ && cp -rv allure/allure-report/history /home/gitlab-runner/; fi
+    # start allure report server
+    - nohup ./allure/allure-$ALLURE_VERSION/bin/allure open -p 55555 allure/allure-report/ > nohup.out 2> nohup.err < /dev/null &
+    - sleep 2 # waiting 2 seconds for allure server to start
+    - |
+      if [ -f nohup.out ]; then
+        ALLURE_URL=$(cat nohup.out | grep -Eo '(http|https)://[^/"]+');
+        echo -e "=============================================================================\n= VIEW ALLURE REPORT: "$ALLURE_URL"\n=============================================================================";
+      fi
+
+deploy_staging:
+  stage: deploy_staging
+  script:
+    # $DEPLOY_SERVER_IP, $DEPLOY_SERVER_PORT and $DEPLOY_SERVER_DOMAIN are environment variables stored in GitLab
+    - if echo $CI_COMMIT_MESSAGE | grep -iqF skip; then
+    -   exit;
+    - fi
+    - |
+      ssh -A sen4ik@$DEPLOY_SERVER_IP -p$DEPLOY_SERVER_PORT "sudo /etc/init.d/cfa-api-staging stop && \
+      APPPROPERTEST=src/main/resources/application.properties && \
+      echo $APPPROPERTEST && \
+      sleep 5 && \
+      cd /home/sen4ik/workspace/staging/cfa-api && \
+      git fetch origin && \
+      git reset --hard origin/master && \
+      sed -i -e "s/cfa/cfa_staging/g" src/main/resources/application.properties && \
+      sed -i "/server.host=/c\server.host=${DEPLOY_SERVER_DOMAIN_STAGING}" src/main/resources/application.properties && \
+      sed -i "/server.port=/c\server.port=8089" src/main/resources/application.properties && \
+      sed -i "/spring.devtools.restart.enabled=/c\spring.devtools.restart.enabled=false" src/main/resources/application.properties && \
+      sed -i "/security.jwt.token.secret-key=/c\security.jwt.token.secret-key=${JWT_SECRET}" src/main/resources/application.properties && \
+      sed -i "/file.upload-dir=/c\file.upload-dir=/home/sen4ik/workspace/staging/cfa-api/files/" src/main/resources/application.properties && \
+      ./scripts/package.sh && \
+      sudo /etc/init.d/cfa-api-staging start" -o "StrictHostKeyChecking no"
+    - echo "Wait 30 seconds for API to start..." && sleep 30
+    - RESPONSE_CODE=$(curl -sL -w "%{http_code}\\n" "https://${DEPLOY_SERVER_DOMAIN_STAGING}/api/v1/category/all" -o /dev/null)
+    - if [[ ! "$RESPONSE_CODE" == 200 ]]; then echo "Wasn't able to verify API is up!" && exit 1; fi
+  environment:
+    name: staging
+    url: https://$DEPLOY_SERVER_DOMAIN_STAGING/swagger-ui.html
+  only:
+    - master
+
+#prod_deploy:
+#  stage: prod_deploy
+#  script:
+#    - if echo $CI_COMMIT_MESSAGE | grep -iqF skip; then
+#    -   exit;
+#    - fi
+#    - ssh -A sen4ik@$DEPLOY_SERVER_IP -p$DEPLOY_SERVER_PORT "/home/sen4ik/workspace/cfa-api/scripts/deploy.sh cfa-api $DEPLOY_SERVER_DOMAIN 8084 $JWT_SECRET \0" -o "StrictHostKeyChecking no"
+#  when: manual
+#  environment:
+#    name: prod
+#    url: https://$DEPLOY_SERVER_DOMAIN/swagger-ui.html
+#  only:
+#    - master'

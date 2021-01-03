@@ -1,0 +1,12 @@
+
+eb init
+
+cat .elasticbeanstalk/config.yml
+
+eb create --single --vpc
+
+eb setenv SERVER_PORT=8084
+
+eb setenv SPRING_DATASOURCE_URL=jdbc:mysql://DBURL:3306/cfa SPRING_DATASOURCE_USERNAME=user SPRING_DATASOURCE_PASSWORD=PASSWORDHERE
+
+ssh ec2-user@55.55.55.55

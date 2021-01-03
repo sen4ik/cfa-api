@@ -1,0 +1,2 @@
+#!/bin/bash
+echo "sen4ik ALL=(ALL) NOPASSWD: /etc/init.d/cfa-api" | tee -a /etc/sudoers

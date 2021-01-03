@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<persistence xmlns="http://java.sun.com/xml/ns/persistence" version="2.0">
+    <persistence-unit name="persistenceUnit">
+        <class>com.sen4ik.cfaapi.entities.Category</class>
+        <class>com.sen4ik.cfaapi.entities.FileEntity</class>
+        <class>com.sen4ik.cfaapi.entities.Tag</class>
+        <class>com.sen4ik.cfaapi.entities.User</class>
+        <class>com.sen4ik.cfaapi.entities.Role</class>
+        <class>com.sen4ik.cfaapi.entities.UserRole</class>
+        <class>com.sen4ik.cfaapi.entities.PlaylistFile</class>
+        <class>com.sen4ik.cfaapi.entities.Playlist</class>
+        <properties>
+            <property name="hibernate.connection.url" value="jdbc:mysql://localhost:3306/cfa"/>
+            <property name="hibernate.connection.driver_class" value="com.mysql.cj.jdbc.Driver"/>
+        </properties>
+    </persistence-unit>
+</persistence>

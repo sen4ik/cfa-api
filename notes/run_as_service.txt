@@ -1,0 +1,18 @@
+# https://www.baeldung.com/spring-boot-app-as-a-service
+# https://stackoverflow.com/questions/21503883/spring-boot-application-as-a-service
+
+mvn clean package -DskipTests=true
+
+java -jar target/cfa-api-*.jar
+
+sudo ln -s /home/sen4ik/workspace/cfa-api/target/cfa-api-0.0.1-SNAPSHOT.jar /etc/init.d/cfa-api
+
+sudo chmod 500 cfa-api-*.jar
+
+sudo /etc/init.d/cfa-api start
+
+# logs
+tail -F /var/log/cfa-api.log
+
+# process id
+cat /var/run/cfa-api/cfa-api.pid

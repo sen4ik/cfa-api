@@ -1,0 +1,6 @@
+- https://spring.io/guides/gs/accessing-data-mysql/
+- https://spring.io/guides/tutorials/rest/
+- https://www.onlinetutorialspoint.com/spring-boot/spring-boot-security-mysql-database-integration-example.html - this wasnt that helpful
+- https://github.com/hantsy/springboot-jwt-sample
+- https://dev.to/cuongld2/create-apis-with-jwt-authorization-using-spring-boot-24f9 (I haven't looked into this one, but it looks like it deserves some attention)
+- https://www.baeldung.com/exception-handling-for-rest-with-spring

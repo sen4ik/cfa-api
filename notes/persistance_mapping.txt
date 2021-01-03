@@ -1,0 +1,4 @@
+Database -> Add Data Source.
+Project Structure -> Modules -> JPA -> Add persistance.xml.
+Persistance -> New -> Persistance Unit.
+Persistance -> Generate Persistance Mapping -> By Database Schema.

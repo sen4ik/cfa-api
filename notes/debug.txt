@@ -1,0 +1,7 @@
+# this works
+java -jar -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5006 target/cfa-api-*.jar
+java -jar -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=5006 target/cfa-api-*.jar
+
+# this does not work
+mvn spring-boot:run -Dagentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5006
+mvn spring-boot:run -Drun.jvmArguments="-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=5006"
