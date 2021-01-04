@@ -174,7 +174,7 @@ deploy_staging:
     name: staging
     url: https://$DEPLOY_SERVER_DOMAIN_STAGING/swagger-ui.html
   only:
-    - master
+    - main
 
 #prod_deploy:
 #  stage: prod_deploy
