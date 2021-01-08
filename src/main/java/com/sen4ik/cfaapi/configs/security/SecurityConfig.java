@@ -28,41 +28,42 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     static String apiPrefix = Constants.API_PREFIX;
 
+    static String[] permitAllGetPatterns = {
+            apiPrefix + "/tag/**",
+            apiPrefix + "/category/**",
+            apiPrefix + "/file/**"
+    };
+
     static String[] adminGetPatterns = {
-            apiPrefix + "/user/**",
+            apiPrefix + "/user/all",
+            apiPrefix + "/user/me",
             apiPrefix + "/playlist/all",
             apiPrefix + "/everything/**"
     };
 
     static String[] userGetPatterns = {
             apiPrefix + "/playlist/user/**",
-            apiPrefix + "/playlist/**"
+            apiPrefix + "/playlist/**",
+            apiPrefix + "/user/me"
     };
 
-    String[] adminDeletePatterns = {
+    static String[] adminDeletePatterns = {
             apiPrefix + "/tag/**",
             apiPrefix + "/user/**",
             apiPrefix + "/playlist/**",
             apiPrefix + "/playlist/**/file/**"
     };
 
-    String[] adminPostPatterns = {
+    static String[] adminPostPatterns = {
             apiPrefix + "/tag/**",
             apiPrefix + "/playlist/add",
             apiPrefix + "/playlist/**/file/**",
             apiPrefix + "/user/**"
     };
 
-    String[] userDeletePatterns = {
+    static String[] userDeletePatterns = {
             apiPrefix + "/playlist/**",
             apiPrefix + "/playlist/**/file/**",
-    };
-
-    static String[] permitAllGetPatterns = {
-            apiPrefix + "/tag/**",
-            apiPrefix + "/category/**",
-            apiPrefix + "/user/**",
-            apiPrefix + "/file/**"
     };
 
     static String[] userPostPatterns = {

@@ -4,9 +4,11 @@ import com.sen4ik.cfaapi.base.Constants;
 import com.sen4ik.cfaapi.entities.User;
 import com.sen4ik.cfaapi.enums.UserPaths;
 import com.sen4ik.cfaapi.utilities.DatabaseUtility;
+import io.restassured.http.ContentType;
 import io.restassured.response.ValidatableResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +16,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 import java.sql.SQLException;
 
+import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.*;
 
 @SpringBootTest
@@ -40,6 +43,7 @@ public class UserTests extends BaseTest{
     }
 
     @Test
+    @DisplayName("Get all users as Admin")
     void getAllUsers() {
         ValidatableResponse response = get(true, true, UserPaths.getAll.value, 200);
         response
@@ -50,6 +54,13 @@ public class UserTests extends BaseTest{
                 .body("find { it.id == 1 }.active", equalTo(active))
                 .body("id", hasItem(id))
                 .body("find { it.id == 1 }.roles[0].roleName", equalTo(roleAdmin));
+    }
+
+    @Test
+    @DisplayName("Get all users as a non-admin user. Only Admin should be able to perform the action.")
+    void getAllUsers_asUser() {
+        ValidatableResponse response = get(true, false, UserPaths.getAll.value, 403);
+        verifyNoTokenResponse(response, Constants.API_PREFIX + UserPaths.getAll.value, "Forbidden");
     }
 
     @Test
@@ -105,6 +116,43 @@ public class UserTests extends BaseTest{
     }
 
     @Test
+    void addUser_verifyJwtTokenReturned() {
+        User u = getUserObject();
+        ValidatableResponse response = post(false, null, UserPaths.signUp.value, objectToJson_withoutNulls(u), 201);
+        response
+                .body("token", not(empty()));
+        String jwtToken = getStringFromJsonResponse(response, "$.token");
+
+        // verify token that was in the payload is valid and can be used
+        response = given()
+                .baseUri(baseUrl)
+                .header(jsonContentTypeHeader)
+                .header("Authorization", "Bearer " + jwtToken)
+                .log().everything()
+            .when()
+                .get(UserPaths.me.value)
+            .then()
+                .statusCode(200)
+                .contentType(ContentType.JSON)
+                .log().everything();
+        verifyUserResponse(response, u.getUsername(), u.getFirstname(), u.getLastname(), u.getEmail(), true, null, roleUser);
+    }
+
+    @Test
+    void hitUserMeEndpoint() {
+        // TODO:
+    }
+
+    @Test
+    void hitUserMeEndpoint_noAuth() {
+        // TODO:
+    }
+    @Test
+    void hitUserMeEndpointForOtherUser() {
+        // TODO:
+    }
+
+    @Test
     void addUser_existingUsername_existingEmail() {
         User u = getUserObject();
         post(false, null, UserPaths.signUp.value, objectToJson_withoutNulls(u), 201);
@@ -122,7 +170,7 @@ public class UserTests extends BaseTest{
     }
 
     @Test
-    void deleteUser() {
+    void deleteUser_asAdmin() {
         User u = getUserObject();
         ValidatableResponse userAddResponse = post(false, null, UserPaths.signUp.value, objectToJson_withoutNulls(u), 201);
         int userId = getIntFromJsonResponse(userAddResponse, "$.id");
@@ -131,6 +179,11 @@ public class UserTests extends BaseTest{
         deleteResponse
                 .body("status", equalTo("Deleted"))
                 .body("id", equalTo(userId));
+    }
+
+    @Test
+    void deleteUser_asNonAdminUser() {
+        // TODO:
     }
 
     @Test
@@ -145,7 +198,7 @@ public class UserTests extends BaseTest{
     }
 
     @Test
-    void getAll_negative_noToken() {
+    void getAllUsers_negative_noToken() {
         ValidatableResponse response =  get(false, null, UserPaths.getAll.value, 403);
         verifyNoTokenResponse(response, Constants.API_PREFIX + UserPaths.getAll.value);
     }

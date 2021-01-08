@@ -41,6 +41,8 @@ public class PlaylistController {
     @Autowired
     private PlaylistFileRepository playlistFileRepository;
 
+    private static String accessForbiddenMessage = "Users can only view/edit/delete playlists that belong to them";
+
     @GetMapping(path="/all")
     @ApiOperation(value = "Get all playlists")
     public @ResponseBody Iterable<Playlist> getAll() {
@@ -55,12 +57,10 @@ public class PlaylistController {
         Playlist playlist = checkIfPlaylistExists(id);
 
         if(UserUtility.getCurrentlyLoggedInUserId() == playlist.getUserId()){
-            return ResponseEntity.status(200)
-                    .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
-                    .body(playlist);
+            return ResponseHelper.success(playlist);
         }
         else{
-            return actionIsForbidden();
+            return ResponseHelper.actionIsForbidden(accessForbiddenMessage);
         }
     }
 
@@ -69,19 +69,11 @@ public class PlaylistController {
     public @ResponseBody ResponseEntity<?> getPlaylistsForUser(@PathVariable("id") @Min(1) int id) {
         // Users can only get their own playlists
         if(UserUtility.getCurrentlyLoggedInUserId() == id){
-            return ResponseEntity.status(200)
-                    .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
-                    .body(playlistRepository.findByUserId(id));
+            return ResponseHelper.success(playlistRepository.findByUserId(id));
         }
         else{
-            return actionIsForbidden();
+            return ResponseHelper.actionIsForbidden(accessForbiddenMessage);
         }
-    }
-
-    private ResponseEntity<?> actionIsForbidden(){
-        return ResponseEntity.status(403)
-                .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
-                .body(ResponseHelper.getResponseObjectAsString("Error", "Users can only view/edit/delete playlists that belong to them"));
     }
 
     @PostMapping(path="/add")
@@ -100,7 +92,7 @@ public class PlaylistController {
 
         // user can only delete their own playlists
         if(UserUtility.getCurrentlyLoggedInUserId() != playlist.getUserId()) {
-            return actionIsForbidden();
+            return ResponseHelper.actionIsForbidden(accessForbiddenMessage);
         }
 
         try {
@@ -121,12 +113,10 @@ public class PlaylistController {
         if(UserUtility.getCurrentlyLoggedInUserId() == playlist.getUserId()){
             PlaylistFile playlistToFile = linkFileToPlaylist(playlist, fileId);
             Optional<PlaylistFile> p = playlistFileRepository.findById(playlistToFile.getPlaylistFileId());
-            return ResponseEntity.status(200)
-                    .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
-                    .body(p.get());
+            return ResponseHelper.success(p.get());
         }
         else{
-            return actionIsForbidden();
+            return ResponseHelper.actionIsForbidden(accessForbiddenMessage);
         }
     }
 
@@ -137,7 +127,7 @@ public class PlaylistController {
 
         Playlist playlist = checkIfPlaylistExists(playlistId);
         if(UserUtility.getCurrentlyLoggedInUserId() != playlist.getUserId()){
-            return actionIsForbidden();
+            return ResponseHelper.actionIsForbidden(accessForbiddenMessage);
         }
 
         List<Integer> nonFoundFiles = new ArrayList<>();
@@ -159,9 +149,7 @@ public class PlaylistController {
             playlistFiles.add(npf.get());
         }
 
-        return ResponseEntity.status(200)
-                .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
-                .body(playlistFiles);
+        return ResponseHelper.success(playlistFiles);
     }
 
     private FileEntity checkIfFileExists(Integer fileID){
@@ -206,7 +194,7 @@ public class PlaylistController {
 
         Optional<Playlist> playlist = playlistRepository.findById(pf.get().getPlaylistId());
         if(UserUtility.getCurrentlyLoggedInUserId() != playlist.get().getUserId()){
-            return actionIsForbidden();
+            return ResponseHelper.actionIsForbidden(accessForbiddenMessage);
         }
 
         playlistFileRepository.delete(pf.get());

@@ -4,7 +4,8 @@ public enum UserPaths {
     signUp("/user/signup"),
     getAll("/user/all"),
     prefix("/user"),
-    prefixWithSlash("/user/");
+    prefixWithSlash("/user/"),
+    me("/user/me");
 
     public final String value;
 

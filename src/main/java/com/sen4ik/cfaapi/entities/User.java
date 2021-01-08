@@ -76,6 +76,10 @@ public class User implements UserDetails {
     @ApiModelProperty(example = "John", required = true)
     private String firstname;
 
+    @Transient
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private String token;
+
     public int getId() {
         return id;
     }
@@ -130,6 +134,14 @@ public class User implements UserDetails {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public String getToken() {
+        return token;
+    }
+
+    public void setToken(String token) {
+        this.token = token;
     }
 
     /*

@@ -218,13 +218,17 @@ public class BaseTest {
     }
 
     public void verifyNoTokenResponse(ValidatableResponse response, String path){
+        verifyNoTokenResponse(response, path, ErrorMessagesCustom.access_denied.value);
+    }
+
+    public void verifyNoTokenResponse(ValidatableResponse response, String path, String message){
         response
                 .statusCode(403)
                 .contentType(ContentType.JSON)
                 .body("timestamp", not(empty()))
                 .body("status", equalTo(403))
                 .body("error", equalTo("Forbidden"))
-                .body("message", equalTo(ErrorMessagesCustom.access_denied.value))
+                .body("message", equalTo(message))
                 .body("path", equalTo(path));
     }
 

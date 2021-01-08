@@ -4,6 +4,7 @@ import org.json.JSONObject;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.lang.Nullable;
 
 public class ResponseHelper {
 
@@ -45,5 +46,21 @@ public class ResponseHelper {
         }
 
         return entity.toString();
+    }
+
+    public static ResponseEntity<?> actionIsForbidden(){
+        return actionIsForbidden("Users can only view/edit/delete data that belong to them");
+    }
+
+    public static ResponseEntity<?> actionIsForbidden(String message){
+        return ResponseEntity.status(403)
+                .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+                .body(ResponseHelper.getResponseObjectAsString("Error", message));
+    }
+
+    public static <T> ResponseEntity<T> success(@Nullable T body){
+        return ResponseEntity.status(200)
+                .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+                .body(body);
     }
 }

@@ -2,6 +2,7 @@ package com.sen4ik.cfaapi.controllers;
 
 import com.sen4ik.cfaapi.base.Constants;
 import com.sen4ik.cfaapi.entities.User;
+import com.sen4ik.cfaapi.services.AuthenticationService;
 import com.sen4ik.cfaapi.utilities.UserUtility;
 import com.sen4ik.cfaapi.base.ResponseHelper;
 import com.sen4ik.cfaapi.entities.Role;
@@ -25,9 +26,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import javax.validation.constraints.Min;
-import java.util.HashSet;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
 @Controller
@@ -47,6 +46,9 @@ public class UserController {
     @Autowired
     PasswordEncoder passwordEncoder;
 
+    @Autowired
+    AuthenticationService authenticationService;
+
     @GetMapping(path="/all")
     @ApiOperation(value = "Get all users")
     public @ResponseBody Iterable<User> getAll() {
@@ -56,14 +58,20 @@ public class UserController {
     @GetMapping(path="/me")
     @ApiOperation(value = "Get currently logged in user details")
     public @ResponseBody User me() {
+        // TODO: this might need some work
         return UserUtility.getCurrentlyLoggedInUser();
     }
 
     @GetMapping(path="/{id}")
     @ApiOperation(value = "Get user by id")
-    public @ResponseBody
-    User getOne(@PathVariable("id") @Min(1) int id) {
-        return userRepository.findById(id).orElseThrow(() -> new RecordNotFoundException(id));
+    public ResponseEntity<?> getOne(@PathVariable("id") @Min(1) int id) {
+        if(!UserUtility.isLoggedInUserAnAdmin()){
+            if(UserUtility.getCurrentlyLoggedInUserId() != id){
+                return ResponseHelper.actionIsForbidden();
+            }
+        }
+        User user = userRepository.findById(id).orElseThrow(() -> new RecordNotFoundException(id));
+        return ResponseHelper.success(user);
     }
 
     @PostMapping(path="/signup", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
@@ -84,6 +92,7 @@ public class UserController {
             throw new BadRequestException("User with email " + user.getEmail() + " already exists!");
         }
 
+        String passwordNotEncoded = user.getPassword();
         String encodedPassword = this.passwordEncoder.encode(user.getPassword());
         user.setPassword(encodedPassword);
         User createdUser = userRepository.save(user);
@@ -99,13 +108,17 @@ public class UserController {
         Set<Role> roles = new HashSet<Role>();
         roles.add(role.get());
         createdUser.setRoles(roles);
+
+        // include jwtToken in the payload
+        String jwtToken = authenticationService.getJwtToken(user.getUsername(), passwordNotEncoded);
+        createdUser.setToken(jwtToken);
+
         return createdUser;
     }
 
     @DeleteMapping(path="/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     @ApiOperation(value = "Delete user")
     public @ResponseBody ResponseEntity<String> deleteUser(@PathVariable int id) {
-        // TODO: Only admin should be able to do it
         try {
             userRepository.deleteById(id);
             return ResponseHelper.deleteSuccess(id);
@@ -129,9 +142,12 @@ public class UserController {
 
         userRepository.save(user);
 
+        /*
         return ResponseEntity.status(HttpStatus.OK)
                 .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
                 .body(userOptional.get());
+         */
+        return ResponseHelper.success(userOptional.get());
     }
 
     // TODO: create endpoint to restore the password for the user
