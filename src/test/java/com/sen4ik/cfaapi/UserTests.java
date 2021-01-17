@@ -139,17 +139,21 @@ public class UserTests extends BaseTest{
     }
 
     @Test
-    void hitUserMeEndpoint() {
-        // TODO:
+    void hitUserMeEndpoint_asAdmin() {
+        ValidatableResponse response = get(true, true, UserPaths.me.value, 200);
+        verifyUserResponse(response, username, firstName, lastName, email, active, id, roleAdmin);
+    }
+
+    @Test
+    void hitUserMeEndpoint_asUser() {
+        ValidatableResponse response = get(true, false, UserPaths.me.value, 200);
+        verifyUserResponse(response, nonAdminUser, nonAdminFirstname, nonAdminLastname, nonAdminEmail, true, nonAdminUserId, roleUser);
     }
 
     @Test
     void hitUserMeEndpoint_noAuth() {
-        // TODO:
-    }
-    @Test
-    void hitUserMeEndpointForOtherUser() {
-        // TODO:
+        ValidatableResponse response = get(false, false, UserPaths.me.value, 403);
+        verifyNoTokenResponse(response, Constants.API_PREFIX + UserPaths.me.value);
     }
 
     @Test
@@ -171,19 +175,25 @@ public class UserTests extends BaseTest{
 
     @Test
     void deleteUser_asAdmin() {
-        User u = getUserObject();
-        ValidatableResponse userAddResponse = post(false, null, UserPaths.signUp.value, objectToJson_withoutNulls(u), 201);
-        int userId = getIntFromJsonResponse(userAddResponse, "$.id");
-
+        int userId = createUser();
         ValidatableResponse deleteResponse = delete(true, true, UserPaths.prefixWithSlash.value + userId, 200);
         deleteResponse
                 .body("status", equalTo("Deleted"))
                 .body("id", equalTo(userId));
     }
 
+    private int createUser(){
+        User u = getUserObject();
+        ValidatableResponse userAddResponse = post(false, null, UserPaths.signUp.value, objectToJson_withoutNulls(u), 201);
+        int userId = getIntFromJsonResponse(userAddResponse, "$.id");
+        return userId;
+    }
+
     @Test
     void deleteUser_asNonAdminUser() {
-        // TODO:
+        int userId = createUser();
+        ValidatableResponse deleteResponse = delete(true, false, UserPaths.prefixWithSlash.value + userId, 403);
+        verifyNoTokenResponse(deleteResponse, Constants.API_PREFIX + UserPaths.prefixWithSlash.value + userId, "Forbidden");
     }
 
     @Test

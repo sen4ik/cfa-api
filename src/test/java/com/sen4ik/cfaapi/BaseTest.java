@@ -38,6 +38,9 @@ public class BaseTest {
     int nonAdminUserId = 2;
     String nonAdminUser = "user";
     String nonAdminPassword = "12345";
+    String nonAdminFirstname = "Vasia";
+    String nonAdminLastname = "Pupkin";
+    String nonAdminEmail = "user@test.com";
 
     public BaseTest() {
         try {

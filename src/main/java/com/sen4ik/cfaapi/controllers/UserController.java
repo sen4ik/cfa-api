@@ -58,7 +58,6 @@ public class UserController {
     @GetMapping(path="/me")
     @ApiOperation(value = "Get currently logged in user details")
     public @ResponseBody User me() {
-        // TODO: this might need some work
         return UserUtility.getCurrentlyLoggedInUser();
     }
 
@@ -142,11 +141,6 @@ public class UserController {
 
         userRepository.save(user);
 
-        /*
-        return ResponseEntity.status(HttpStatus.OK)
-                .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
-                .body(userOptional.get());
-         */
         return ResponseHelper.success(userOptional.get());
     }
 
