@@ -138,14 +138,20 @@ public class FileTests extends BaseTest {
     }
 
     private File getSampleFile() throws IOException {
-        String sampleFileName = "sample.mp3";
-        return getSampleFile(Constants.TEST_DATA_DIR + sampleFileName);
+        return getSampleFile(Constants.TEST_DATA_DIR + "sample.mp3");
     }
 
     private File getSampleFile(String filename) throws IOException {
         return fileUtility.getCopyOfFile(
                 filename,
                 Constants.TEST_DATA_DIR + "temp/" + "sample-" + faker.number().digits(12) + ".mp3"
+        );
+    }
+
+    private File getSampleFile_withSpacesInTheFilename() throws IOException {
+        return fileUtility.getCopyOfFile(
+                Constants.TEST_DATA_DIR + "sample.mp3",
+                Constants.TEST_DATA_DIR + "temp/" + "sample sample " + faker.number().digits(12) + ".mp3"
         );
     }
 
@@ -199,6 +205,14 @@ public class FileTests extends BaseTest {
         // verify file was uploaded
         String fileInUploadLocation = fileUtility.getCategoryFolderPath(categoryId) + sampleFile.getName();
         assertTrue(fileUtility.doesFileExists(fileInUploadLocation));
+    }
+
+    @Test
+    void addFile_spaceInTheFilename() throws Exception {
+        File sampleFile = getSampleFile_withSpacesInTheFilename();
+        ValidatableResponse response = addFile(sampleFile);
+        response
+                .body("fileName", equalTo(sampleFile.getName().replaceAll(" ", "_")));
     }
 
     private ValidatableResponse addFile(File sampleFile) {
@@ -412,7 +426,7 @@ public class FileTests extends BaseTest {
         int fileId = getIntFromJsonResponse(response, "$.id");
         String sampleFilePath = fileUtility.getCategoryFolderPath(categoryId) + sampleFile.getName();
 
-        File replacementFile = getSampleFile(Constants.TEST_DATA_DIR + "sample2.mp3");
+        File replacementFile = getSampleFile(Constants.TEST_DATA_DIR + "sample 2.mp3");
         List<MultiPartSpecification> multiPartSpecificationList = getMultiPartSpecificationList(replacementFile, mp3MimeType, null, null);
         response =  put(true, FilePaths.replaceFile.value + fileId, multiPartSpecificationList, null, 200);
         String replacementFilePath = fileUtility.getCategoryFolderPath(categoryId) + replacementFile.getName();

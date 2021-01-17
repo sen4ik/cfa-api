@@ -114,7 +114,7 @@ public class FileUtility {
     }
 
     public void deleteFilesAndDirsWithPrefix(File[] files, String prefix) {
-        log.info("CALLED: deleteFilesAndDirsWithPrefix()");
+        log.info("CALLED: deleteFilesAndDirsWithPrefix(\"" + files.toString() + "\", \"" + prefix + "\")");
         for (File file : files) {
             if (file.isDirectory()) {
                 deleteFilesAndDirsWithPrefix(file.listFiles(), prefix);

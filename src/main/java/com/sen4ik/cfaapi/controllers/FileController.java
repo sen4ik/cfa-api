@@ -164,9 +164,12 @@ public class FileController {
         if(!isContentTypeOk(file)){
             return badContentType();
         }
+
+        String updatedFileName = file.getOriginalFilename().replaceAll(" ", "_");
+
         Path savedFilePath = null;
         try {
-            savedFilePath = saveUploadedFiles(file, categoryId);
+            savedFilePath = saveUploadedFiles(file, updatedFileName, categoryId);
         } catch (IOException e) {
             return new ResponseEntity<>(
                     ResponseHelper.getResponseObjectAsString("Error", e.getMessage()),
@@ -187,7 +190,7 @@ public class FileController {
 
         fileToSave.setAddedBy(UserUtility.getCurrentlyLoggedInUserId());
         fileToSave.setFileTitle(fileTitle);
-        fileToSave.setFileName(file.getOriginalFilename());
+        fileToSave.setFileName(updatedFileName);
         fileToSave.setCategoryId(categoryId);
         fileToSave.setFileSizeBytes(file.getSize());
 
@@ -293,8 +296,9 @@ public class FileController {
         fileUtility.deleteFile(filePath);
 
         // store new file in the file system
+        String updatedFileName = file.getOriginalFilename().replaceAll(" ", "_");
         try {
-            saveUploadedFiles(file, fileOptional.get().getCategoryId());
+            saveUploadedFiles(file, updatedFileName, fileOptional.get().getCategoryId());
         } catch (IOException e) {
             return new ResponseEntity<>(
                     ResponseHelper.getResponseObjectAsString("Error", e.getMessage()),
@@ -303,7 +307,7 @@ public class FileController {
         }
 
         // update filename and file size in database
-        fileOptional.get().setFileName(file.getOriginalFilename());
+        fileOptional.get().setFileName(updatedFileName);
         fileOptional.get().setFileSizeBytes(file.getSize());
         fileRepository.save(fileOptional.get());
 
@@ -312,9 +316,10 @@ public class FileController {
                 .body(fileOptional.get());
     }
 
-    private Path saveUploadedFiles(MultipartFile file, Integer categoryId) throws Exception {
+    private Path saveUploadedFiles(MultipartFile file, String fileName, Integer categoryId) throws Exception {
 
-        String fileName = file.getOriginalFilename();
+        // String fileName = file.getOriginalFilename();
+
         byte[] bytes = file.getBytes();
 
         // get path based on category file belongs to
