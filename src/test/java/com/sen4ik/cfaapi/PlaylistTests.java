@@ -1,6 +1,8 @@
 package com.sen4ik.cfaapi;
 
+import com.sen4ik.cfaapi.base.Constants;
 import com.sen4ik.cfaapi.entities.Playlist;
+import com.sen4ik.cfaapi.enums.ErrorMessagesCustom;
 import com.sen4ik.cfaapi.enums.PlaylistPaths;
 import com.sen4ik.cfaapi.utilities.DatabaseUtility;
 import io.restassured.response.ValidatableResponse;
@@ -60,7 +62,7 @@ public class PlaylistTests extends BaseTest {
     void getAllPlaylists_noToken() {
         ValidatableResponse response = get(false, null, PlaylistPaths.getAll.value, 403);
         response
-                .body("message", containsString("Access Denied"))
+                .body("message", containsString(ErrorMessagesCustom.access_denied.value))
                 .body("error", equalTo("Forbidden"));
     }
 
@@ -100,7 +102,8 @@ public class PlaylistTests extends BaseTest {
 
     @Test
     void getPlaylistById_noToken() {
-        // TODO:
+        ValidatableResponse response = get(false, null, PlaylistPaths.prefixWithSlash.value + 1, 403);
+        verifyNoTokenResponse(response, Constants.API_PREFIX + PlaylistPaths.prefixWithSlash.value + 1);
     }
 
     @Test
@@ -125,7 +128,8 @@ public class PlaylistTests extends BaseTest {
 
     @Test
     void getPlaylistForUser_noToken() {
-        // TODO:
+        ValidatableResponse response = get(false, null,PlaylistPaths.getPlaylistsForUser.value + 1, 403);
+        verifyNoTokenResponse(response, Constants.API_PREFIX + PlaylistPaths.getPlaylistsForUser.value + 1);
     }
 
     @Test
@@ -135,18 +139,15 @@ public class PlaylistTests extends BaseTest {
     }
 
     @Test
-    void addPlaylist_verifyItShowsInAllEndpoint() {
-        // TODO:
-    }
-
-    @Test
     void addPlaylist_asAdmin() {
         addPlaylistAndVerify(true, adminUserId);
+        // TODO: verify playlist shows when GET all playlist is hit
     }
 
     @Test
     void addPlaylist_asUser() {
         addPlaylistAndVerify(false, nonAdminUserId);
+        // TODO: verify playlist shows when GET all playlist is hit
     }
 
     @Test
@@ -378,7 +379,7 @@ public class PlaylistTests extends BaseTest {
         response
                 .body("error", equalTo("Forbidden"))
                 .body("status", equalTo(403))
-                .body("message", equalTo("Access Denied"));
+                .body("message", equalTo(ErrorMessagesCustom.access_denied.value));
     }
 
     private void verifyNonExistingPlaylistResponse(ValidatableResponse response, int playlistId){
