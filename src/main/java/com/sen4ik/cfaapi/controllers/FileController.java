@@ -13,6 +13,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.tika.Tika;
+import org.sen4ik.utils.FileUtil;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -248,7 +249,7 @@ public class FileController {
 
             // delete file from file system
             String filePath = fileUtility.getCategoryFolderPath(fileOptional.get().getCategoryId()) + fileOptional.get().getFileName();
-            fileUtility.deleteFile(filePath);
+            FileUtil.deleteFile(filePath);
 
             fileRepository.deleteById(id);
 
@@ -293,7 +294,7 @@ public class FileController {
 
         // delete old file from file system
         String filePath = fileUtility.getCategoryFolderPath(fileOptional.get().getCategoryId()) + fileOptional.get().getFileName();
-        fileUtility.deleteFile(filePath);
+        FileUtil.deleteFile(filePath);
 
         // store new file in the file system
         String updatedFileName = file.getOriginalFilename().replaceAll(" ", "_");

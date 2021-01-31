@@ -20,6 +20,7 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
+import org.sen4ik.utils.FileUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
@@ -60,17 +61,17 @@ public class FileTests extends BaseTest {
     @BeforeAll
     public void beforeAll(){
         // delete test sample files from upload location
-        fileUtility.deleteFilesAndDirsWithPrefix(new File(fileUtility.getUploadDir()).listFiles(), "sample-");
+        FileUtil.deleteFilesAndDirsWithPrefix(new File(fileUtility.getUploadDir()).listFiles(), "sample-");
     }
 
     @AfterAll
     public void tearDown() throws SQLException, ClassNotFoundException {
         // delete test sample files from test_data
         // fileUtility.deleteFilesAndDirsWithPrefix(new File(Constants.TEST_DATA_DIR).listFiles(), "sample-");
-        fileUtility.deleteFilesAndDirsFromPath(Constants.TEST_DATA_DIR + "temp");
+        FileUtil.deleteFilesAndDirsFromPath(Constants.TEST_DATA_DIR + "temp");
 
         // delete test sample files from upload location
-        fileUtility.deleteFilesAndDirsWithPrefix(new File(fileUtility.getUploadDir()).listFiles(), Arrays.asList("sample-", "файлик"));
+        FileUtil.deleteFilesAndDirsWithPrefix(new File(fileUtility.getUploadDir()).listFiles(), Arrays.asList("sample-", "файлик"));
 
         // cleanup db
         databaseUtility.executeUpdate("DELETE FROM files WHERE file_title LIKE 'Test_%'");
@@ -142,14 +143,14 @@ public class FileTests extends BaseTest {
     }
 
     private File getSampleFile(String filename) throws IOException {
-        return fileUtility.getCopyOfFile(
+        return FileUtil.getCopyOfFile(
                 filename,
                 Constants.TEST_DATA_DIR + "temp/" + "sample-" + faker.number().digits(12) + ".mp3"
         );
     }
 
     private File getSampleFile_withSpacesInTheFilename() throws IOException {
-        return fileUtility.getCopyOfFile(
+        return FileUtil.getCopyOfFile(
                 Constants.TEST_DATA_DIR + "sample.mp3",
                 Constants.TEST_DATA_DIR + "temp/" + "sample sample " + faker.number().digits(12) + ".mp3"
         );
@@ -204,7 +205,7 @@ public class FileTests extends BaseTest {
         verifyFileResponse(response, sampleFile.getName(), fileTitle, categoryId);
         // verify file was uploaded
         String fileInUploadLocation = fileUtility.getCategoryFolderPath(categoryId) + sampleFile.getName();
-        assertTrue(fileUtility.doesFileExists(fileInUploadLocation));
+        assertTrue(FileUtil.doesFileExists(fileInUploadLocation));
     }
 
     @Test
@@ -245,7 +246,7 @@ public class FileTests extends BaseTest {
 
         // verify file was uploaded
         String fileInUploadLocation = fileUtility.getCategoryFolderPath(0) + sampleFile.getName();
-        assertTrue(fileUtility.doesFileExists(fileInUploadLocation));
+        assertTrue(FileUtil.doesFileExists(fileInUploadLocation));
     }
 
     @Test
@@ -280,7 +281,7 @@ public class FileTests extends BaseTest {
     @Test
     void addFile_fileSizeBiggerThanAllowed() {
         File sampleTextFile = new File(Constants.TEST_DATA_DIR + "sample.txt");
-        String mimeType = fileUtility.getMimeTypeWithTika(sampleTextFile);
+        String mimeType = FileUtil.getMimeTypeWithTika(sampleTextFile);
         List<MultiPartSpecification> multiPartSpecificationList = getMultiPartSpecificationList(sampleTextFile, mimeType, categoryId, fileTitle);
         ValidatableResponse response = post(true, true, FilePaths.add.value, multiPartSpecificationList, null, 400);
         response
@@ -333,7 +334,7 @@ public class FileTests extends BaseTest {
 
         // verify file was uploaded
         String fileInUploadLocation = fileUtility.getCategoryFolderPath(categoryId) + sampleFileName;
-        assertTrue(fileUtility.doesFileExists(fileInUploadLocation));
+        assertTrue(FileUtil.doesFileExists(fileInUploadLocation));
     }
 
     @Test
@@ -388,7 +389,7 @@ public class FileTests extends BaseTest {
 
         // verify file is deleted from the file system
         String fileLocation = fileUtility.getCategoryFolderPath(categoryId) + sampleFile.getName();
-        assertFalse(fileUtility.doesFileExists(fileLocation));
+        assertFalse(FileUtil.doesFileExists(fileLocation));
     }
 
     @Test

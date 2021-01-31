@@ -9,7 +9,6 @@ import com.jayway.jsonpath.JsonPath;
 import com.sen4ik.cfaapi.base.Constants;
 import com.sen4ik.cfaapi.enums.AuthPaths;
 import com.sen4ik.cfaapi.enums.ErrorMessagesCustom;
-import com.sen4ik.cfaapi.utilities.PropertiesFileUtility;
 import io.restassured.http.ContentType;
 import io.restassured.http.Header;
 import io.restassured.response.Response;
@@ -18,6 +17,7 @@ import io.restassured.specification.MultiPartSpecification;
 import io.restassured.specification.RequestSpecification;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.sen4ik.utils.PropertiesFileUtil;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
@@ -44,8 +44,8 @@ public class BaseTest {
 
     public BaseTest() {
         try {
-            baseUrl = "http://localhost:" + new PropertiesFileUtility(Constants.APP_PROP).getProperty("server.port") + Constants.API_PREFIX;
-            // baseUrl = "http://192.168.1.7:" + new PropertiesFileUtility(Constants.APP_PROP).getProperty("server.port") + Constants.API_PREFIX;
+            baseUrl = "http://localhost:" + new PropertiesFileUtil(Constants.APP_PROP).getProperty("server.port") + Constants.API_PREFIX;
+            // baseUrl = "http://192.168.1.7:" + new PropertiesFileUtil(Constants.APP_PROP).getProperty("server.port") + Constants.API_PREFIX;
         } catch (IOException e) {
             e.printStackTrace();
         }

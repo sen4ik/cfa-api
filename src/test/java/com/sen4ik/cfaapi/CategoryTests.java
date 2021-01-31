@@ -9,6 +9,7 @@ import io.restassured.response.ValidatableResponse;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
+import org.sen4ik.utils.FileUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
@@ -34,7 +35,7 @@ public class CategoryTests extends BaseTest{
     public void tearDown() throws SQLException, ClassNotFoundException {
         // delete test folders
         File[] files = new File(fileUtility.getUploadDir()).listFiles();
-        fileUtility.deleteFilesAndDirsWithPrefix(files, "Test_");
+        FileUtil.deleteFilesAndDirsWithPrefix(files, "Test_");
 
         // cleanup db
         databaseUtility.executeUpdate("DELETE FROM categories WHERE category_name LIKE 'Test_%'");
