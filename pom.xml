@@ -18,7 +18,7 @@
 	<version>0.0.1-SNAPSHOT</version>
 	<name>cfa-api</name>
 	<description>CFA API</description>
-<!--	<packaging>war</packaging>-->
+	<!-- <packaging>war</packaging>-->
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -34,11 +34,6 @@
 	</repositories>
 
 	<dependencies>
-<!--		<dependency>-->
-<!--			<groupId>org.springframework.boot</groupId>-->
-<!--			<artifactId>spring-boot-starter-tomcat</artifactId>-->
-<!--			<scope>provided</scope>-->
-<!--		</dependency>-->
 		<dependency>
 			<groupId>org.json</groupId>
 			<artifactId>json</artifactId>
@@ -52,7 +47,7 @@
 		<dependency>
 			<groupId>com.github.sen4ik</groupId>
 			<artifactId>utils</artifactId>
-			<version>c93713e</version>
+			<version>a4e3158</version>
 		</dependency>
 		<dependency>
 			<groupId>io.rest-assured</groupId>

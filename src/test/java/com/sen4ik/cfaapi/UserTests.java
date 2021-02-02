@@ -11,6 +11,7 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
+import org.sen4ik.utils.JsonUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
@@ -108,7 +109,7 @@ public class UserTests extends BaseTest{
     @Test
     void addUser() {
         User u = getUserObject();
-        ValidatableResponse response = post(false, null, UserPaths.signUp.value, objectToJson_withoutNulls(u), 201);
+        ValidatableResponse response = post(false, null, UserPaths.signUp.value, JsonUtil.objectToJson_withoutNulls(u), 201);
         verifyUserResponse(response, u.getUsername(), u.getFirstname(), u.getLastname(), u.getEmail(), true, null, roleUser);
 
         // verify user can get token
@@ -118,10 +119,10 @@ public class UserTests extends BaseTest{
     @Test
     void addUser_verifyJwtTokenReturned() {
         User u = getUserObject();
-        ValidatableResponse response = post(false, null, UserPaths.signUp.value, objectToJson_withoutNulls(u), 201);
+        ValidatableResponse response = post(false, null, UserPaths.signUp.value, JsonUtil.objectToJson_withoutNulls(u), 201);
         response
                 .body("token", not(empty()));
-        String jwtToken = getStringFromJsonResponse(response, "$.token");
+        String jwtToken = JsonUtil.getStringFromJsonResponse(response, "$.token");
 
         // verify token that was in the payload is valid and can be used
         response = given()
@@ -159,15 +160,15 @@ public class UserTests extends BaseTest{
     @Test
     void addUser_existingUsername_existingEmail() {
         User u = getUserObject();
-        post(false, null, UserPaths.signUp.value, objectToJson_withoutNulls(u), 201);
+        post(false, null, UserPaths.signUp.value, JsonUtil.objectToJson_withoutNulls(u), 201);
 
-        ValidatableResponse response = post(false, null, UserPaths.signUp.value, objectToJson_withoutNulls(u), 400);
+        ValidatableResponse response = post(false, null, UserPaths.signUp.value, JsonUtil.objectToJson_withoutNulls(u), 400);
         response
                 .body("message", equalTo("Username " + u.getUsername() + " is already taken!"))
                 .body("status", equalTo("Error"));
 
         u.setUsername("Test_" + faker.name().username());
-        response = post(false, null, UserPaths.signUp.value, objectToJson_withoutNulls(u), 400);
+        response = post(false, null, UserPaths.signUp.value, JsonUtil.objectToJson_withoutNulls(u), 400);
         response
                 .body("message", equalTo("User with email " + u.getEmail() + " already exists!"))
                 .body("status", equalTo("Error"));
@@ -184,8 +185,8 @@ public class UserTests extends BaseTest{
 
     private int createUser(){
         User u = getUserObject();
-        ValidatableResponse userAddResponse = post(false, null, UserPaths.signUp.value, objectToJson_withoutNulls(u), 201);
-        int userId = getIntFromJsonResponse(userAddResponse, "$.id");
+        ValidatableResponse userAddResponse = post(false, null, UserPaths.signUp.value, JsonUtil.objectToJson_withoutNulls(u), 201);
+        int userId = JsonUtil.getIntFromJsonResponse(userAddResponse, "$.id");
         return userId;
     }
 
@@ -199,11 +200,11 @@ public class UserTests extends BaseTest{
     @Test
     void updateUser() {
         User u = getUserObject();
-        ValidatableResponse r = post(false, null, UserPaths.signUp.value, objectToJson_withoutNulls(u), 201);
-        int userId = getIntFromJsonResponse(r, "$.id");
+        ValidatableResponse r = post(false, null, UserPaths.signUp.value, JsonUtil.objectToJson_withoutNulls(u), 201);
+        int userId = JsonUtil.getIntFromJsonResponse(r, "$.id");
 
         User userUpdate = getUserObject();
-        ValidatableResponse response = put(true, UserPaths.prefixWithSlash.value + userId, objectToJson_withoutNulls(userUpdate), 200);
+        ValidatableResponse response = put(true, UserPaths.prefixWithSlash.value + userId, JsonUtil.objectToJson_withoutNulls(userUpdate), 200);
         verifyUserResponse(response, userUpdate.getUsername(), userUpdate.getFirstname(), userUpdate.getLastname(), userUpdate.getEmail(), true, userId, null);
     }
 
@@ -235,7 +236,7 @@ public class UserTests extends BaseTest{
     void fieldLength() {
         User u = getUserObject();
         u.setLastname(faker.lorem().fixedString(51));
-        ValidatableResponse response = post(false, null, UserPaths.signUp.value, objectToJson_withoutNulls(u), 400);
+        ValidatableResponse response = post(false, null, UserPaths.signUp.value, JsonUtil.objectToJson_withoutNulls(u), 400);
         response
                 .body("status", equalTo("Error"))
                 .body("message.lastname", equalTo("size must be between 0 and 50"));

@@ -10,6 +10,7 @@ import io.restassured.response.ValidatableResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+import org.sen4ik.utils.JsonUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
@@ -61,9 +62,9 @@ public class UpdateFileSizesAndLength extends BaseTest {
                     .contentType(ContentType.JSON)
                     .log().everything();
 
-            int fileId = getIntFromJsonResponse(singleFileResponse, "$.id");
-            int categoryId = getIntFromJsonResponse(singleFileResponse, "$.categoryId");
-            String fileName = getStringFromJsonResponse(singleFileResponse, "$.fileName");
+            int fileId = JsonUtil.getIntFromJsonResponse(singleFileResponse, "$.id");
+            int categoryId = JsonUtil.getIntFromJsonResponse(singleFileResponse, "$.categoryId");
+            String fileName = JsonUtil.getStringFromJsonResponse(singleFileResponse, "$.fileName");
             String filePath = fileUtility.getCategoryFolderPath(categoryId) + fileName;
             log.info(" ==> " + fileName + ": " + filePath);
 

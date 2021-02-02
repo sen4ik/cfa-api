@@ -21,6 +21,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.sen4ik.utils.FileUtil;
+import org.sen4ik.utils.JsonUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
@@ -125,7 +126,7 @@ public class FileTests extends BaseTest {
         File sampleFile = getSampleFile();
         List<MultiPartSpecification> multiPartSpecificationList = getMultiPartSpecificationList(sampleFile, mp3MimeType, categoryId, fileTitle);
         ValidatableResponse response =  post(true, true, FilePaths.add.value, multiPartSpecificationList, null, 201);
-        int fileId = getIntFromJsonResponse(response, "$.id");
+        int fileId = JsonUtil.getIntFromJsonResponse(response, "$.id");
         ValidatableResponse singleResponse = get(false, null, FilePaths.prefixWithSlash.value + fileId, 200);
         verifyFileResponse(singleResponse, sampleFile.getName(), fileTitle, categoryId);
     }
@@ -381,7 +382,7 @@ public class FileTests extends BaseTest {
     void deleteFile() throws Exception {
         File sampleFile = getSampleFile();
         ValidatableResponse response =  addFile(sampleFile);
-        int fileId = getIntFromJsonResponse(response, "$.id");
+        int fileId = JsonUtil.getIntFromJsonResponse(response, "$.id");
         response = delete(true, true, FilePaths.prefixWithSlash.value + fileId, 200);
         response
                 .body("status", equalTo("Deleted"))
@@ -402,7 +403,7 @@ public class FileTests extends BaseTest {
         // FileEntity createdFile = (FileEntity) objectFromJson(json, FileEntity.class);
 
         FileEntity updateWith = new FileEntity();
-        updateWith.setId(getIntFromJsonResponse(response, "$.id"));
+        updateWith.setId(JsonUtil.getIntFromJsonResponse(response, "$.id"));
         updateWith.setFileTitle("Test_File_1");
         updateWith.setFileName("file.mp3");
         updateWith.setCategoryId(4);
@@ -411,11 +412,14 @@ public class FileTests extends BaseTest {
         updateWith.setListened(4);
         updateWith.setHidden(true);
 
-        ValidatableResponse updateResponse = put(true, FilePaths.updateFileInfo.value + getIntFromJsonResponse(response, "$.id"), objectToJson_withoutNulls(updateWith), 200);
-        String updateJson = responseToJson(updateResponse);
+        ValidatableResponse updateResponse = put(
+                true,
+                FilePaths.updateFileInfo.value + JsonUtil.getIntFromJsonResponse(response, "$.id"), JsonUtil.objectToJson_withoutNulls(updateWith),
+                200);
+        String updateJson = JsonUtil.responseToJson(updateResponse);
         // FileEntity updatedFile = (FileEntity) objectFromJson(updateJson, FileEntity.class);
 
-        MapDifference<String, Object> diff = compareTwoJsonsAndGetTheDifference(objectToJson_withoutNulls(updateWith), updateJson);
+        MapDifference<String, Object> diff = JsonUtil.compareTwoJsonsAndGetTheDifference(JsonUtil.objectToJson_withoutNulls(updateWith), updateJson);
         assertTrue(diff.entriesOnlyOnRight().containsKey("addedBy"));
         assertTrue(diff.entriesOnlyOnRight().containsKey("addedOn"));
     }
@@ -424,7 +428,7 @@ public class FileTests extends BaseTest {
     void replaceFile() throws Exception {
         File sampleFile = getSampleFile();
         ValidatableResponse response = addFile(sampleFile);
-        int fileId = getIntFromJsonResponse(response, "$.id");
+        int fileId = JsonUtil.getIntFromJsonResponse(response, "$.id");
         String sampleFilePath = fileUtility.getCategoryFolderPath(categoryId) + sampleFile.getName();
 
         File replacementFile = getSampleFile(Constants.TEST_DATA_DIR + "sample 2.mp3");

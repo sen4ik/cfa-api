@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
+import org.sen4ik.utils.JsonUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
@@ -80,10 +81,10 @@ class TagTests extends BaseTest{
 				.body("timestamp", not(empty()))
 				.log().everything();
 
-		assertEquals(getStringFromJsonResponse(response, "$.message"), ErrorMessagesCustom.access_denied.value);
-		assertEquals(getStringFromJsonResponse(response, "$.error"), "Forbidden");
-		assertEquals(getIntFromJsonResponse(response, "$.status"), 403);
-		assertEquals(getStringFromJsonResponse(response, "$.path"), "/api/v1/tag/add");
+		assertEquals(JsonUtil.getStringFromJsonResponse(response, "$.message"), ErrorMessagesCustom.access_denied.value);
+		assertEquals(JsonUtil.getStringFromJsonResponse(response, "$.error"), "Forbidden");
+		assertEquals(JsonUtil.getIntFromJsonResponse(response, "$.status"), 403);
+		assertEquals(JsonUtil.getStringFromJsonResponse(response, "$.path"), "/api/v1/tag/add");
 	}
 
 	private int createTag(String tagName, String token){
@@ -102,7 +103,7 @@ class TagTests extends BaseTest{
 				.body("id", not(empty()))
 				.log().everything();
 
-		return getIntFromJsonResponse(response, "$.id");
+		return JsonUtil.getIntFromJsonResponse(response, "$.id");
 	}
 
 	private String getRandomTagName(){
@@ -124,8 +125,8 @@ class TagTests extends BaseTest{
 				.contentType(ContentType.JSON)
 				.log().everything();
 
-		assertEquals(getStringFromJsonResponse(response, "$.status"), "Deleted");
-		assertEquals(getIntFromJsonResponse(response, "$.id"), id);
+		assertEquals(JsonUtil.getStringFromJsonResponse(response, "$.status"), "Deleted");
+		assertEquals(JsonUtil.getIntFromJsonResponse(response, "$.id"), id);
 	}
 
 	@Test
@@ -143,10 +144,10 @@ class TagTests extends BaseTest{
 				.body("timestamp", not(empty()))
 				.log().everything();
 
-		assertEquals(getStringFromJsonResponse(response, "$.message"), ErrorMessagesCustom.access_denied.value);
-		assertEquals(getStringFromJsonResponse(response, "$.error"), "Forbidden");
-		assertEquals(getIntFromJsonResponse(response, "$.status"), 403);
-		assertEquals(getStringFromJsonResponse(response, "$.path"),"/api/v1/tag/" + id);
+		assertEquals(JsonUtil.getStringFromJsonResponse(response, "$.message"), ErrorMessagesCustom.access_denied.value);
+		assertEquals(JsonUtil.getStringFromJsonResponse(response, "$.error"), "Forbidden");
+		assertEquals(JsonUtil.getIntFromJsonResponse(response, "$.status"), 403);
+		assertEquals(JsonUtil.getStringFromJsonResponse(response, "$.path"),"/api/v1/tag/" + id);
 	}
 
 }

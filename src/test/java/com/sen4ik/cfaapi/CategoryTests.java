@@ -10,6 +10,7 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.sen4ik.utils.FileUtil;
+import org.sen4ik.utils.JsonUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
@@ -42,7 +43,7 @@ public class CategoryTests extends BaseTest{
     }
 
     private ValidatableResponse createCategory(Category c){
-        return createCategory(objectToJson_withoutNulls(c));
+        return createCategory(JsonUtil.objectToJson_withoutNulls(c));
     }
 
     private ValidatableResponse createCategory(String body){
@@ -50,7 +51,7 @@ public class CategoryTests extends BaseTest{
     }
 
     private ValidatableResponse updateCategory(int categoryId, Category c){
-        return put(true, CategoryPaths.prefixWithSlash.value + categoryId, objectToJson_withoutNulls(c), 200);
+        return put(true, CategoryPaths.prefixWithSlash.value + categoryId, JsonUtil.objectToJson_withoutNulls(c), 200);
     }
 
     private ValidatableResponse deleteCategory(int catId){
@@ -124,7 +125,7 @@ public class CategoryTests extends BaseTest{
         Category c = getCategoryObject();
         ValidatableResponse response = createCategory(c);
         verifyCategoryResponse(response, c);
-        int createdCatId = getIntFromJsonResponse(response, "$.id");
+        int createdCatId = JsonUtil.getIntFromJsonResponse(response, "$.id");
 
         // verify it shows in /all payload
         ValidatableResponse allCategoriesResponse = get(false, null, CategoryPaths.getAll.value, 200);
@@ -153,7 +154,7 @@ public class CategoryTests extends BaseTest{
         ValidatableResponse response = createCategory(c);
         verifyCategoryResponse(response, c);
 
-        response = post(true, true, CategoryPaths.add.value, objectToJson_withoutNulls(c), 400);
+        response = post(true, true, CategoryPaths.add.value, JsonUtil.objectToJson_withoutNulls(c), 400);
         response
                 .body("status", equalTo("Error"))
                 .body("message", equalTo(c.getCategoryFolder() + " category folder already exists in the file system"));
@@ -174,7 +175,7 @@ public class CategoryTests extends BaseTest{
         int parentId = 9999999;
         c.setParentId(parentId);
 
-        ValidatableResponse response = post(true, true, CategoryPaths.add.value, objectToJson_withoutNulls(c), 404);
+        ValidatableResponse response = post(true, true, CategoryPaths.add.value, JsonUtil.objectToJson_withoutNulls(c), 404);
         response
                 .body("status", equalTo("Error"))
                 .body("message", equalTo("Error while building category directory path. Parent directory ID: " + parentId  + " does not exist."));
@@ -186,7 +187,7 @@ public class CategoryTests extends BaseTest{
         c.setOrderBy("title ASC");
         c.setZip("Category.zip");
 
-        ValidatableResponse response = post(true, true, CategoryPaths.add.value, objectToJson_withoutNulls(c), 400);
+        ValidatableResponse response = post(true, true, CategoryPaths.add.value, JsonUtil.objectToJson_withoutNulls(c), 400);
         response
                 .body("status", equalTo("Error"))
                 .body("message.categoryName", equalTo("Please provide a category name"))
@@ -200,7 +201,7 @@ public class CategoryTests extends BaseTest{
         c.setCategoryName(faker.lorem().fixedString(101));
         c.setCategoryFolder(faker.lorem().fixedString(101));
 
-        ValidatableResponse response = post(true, true, CategoryPaths.add.value, objectToJson_withoutNulls(c), 400);
+        ValidatableResponse response = post(true, true, CategoryPaths.add.value, JsonUtil.objectToJson_withoutNulls(c), 400);
         response
                 .body("status", equalTo("Error"))
                 .body("message.categoryName", equalTo("size must be between 1 and 100"))
@@ -210,7 +211,7 @@ public class CategoryTests extends BaseTest{
     @Test
     void addCategory_ignoreUnknown() {
         Category c = getCategoryObject();
-        String jsonBody = objectToJson_withoutNulls(c);
+        String jsonBody = JsonUtil.objectToJson_withoutNulls(c);
         jsonBody = jsonBody.replace("}", ",\"blabla\":\"blabla\"}");
         ValidatableResponse r = createCategory(jsonBody);
     }
@@ -227,7 +228,7 @@ public class CategoryTests extends BaseTest{
     void deleteCategory() {
         Category c = getCategoryObject();
         ValidatableResponse response = createCategory(c);
-        int createdCatId = getIntFromJsonResponse(response, "$.id");
+        int createdCatId = JsonUtil.getIntFromJsonResponse(response, "$.id");
         response = deleteCategory(createdCatId);
         response
                 .body("status", equalTo("Deleted"))
@@ -240,7 +241,7 @@ public class CategoryTests extends BaseTest{
         Category c = getCategoryObject();
         ValidatableResponse response = createCategory(c);
         verifyCategoryResponse(response, c);
-        int createdCatId = getIntFromJsonResponse(response, "$.id");
+        int createdCatId = JsonUtil.getIntFromJsonResponse(response, "$.id");
 
         String random = faker.number().digits(10);
         String categoryName = "Test_Категория-" + random;
@@ -261,7 +262,7 @@ public class CategoryTests extends BaseTest{
         c.setOrderBy("title ASC");
         c.setZip("Category.zip");
 
-        ValidatableResponse response = put(true, CategoryPaths.prefixWithSlash.value + 111, objectToJson_withoutNulls(c), 400);
+        ValidatableResponse response = put(true, CategoryPaths.prefixWithSlash.value + 111, JsonUtil.objectToJson_withoutNulls(c), 400);
         response
                 .body("status", equalTo("Error"))
                 .body("message.categoryName", equalTo("Please provide a category name"))
@@ -272,7 +273,7 @@ public class CategoryTests extends BaseTest{
     @Test
     void updateNonExistingCategory() {
         int nonExistingCategory = 999999;
-        ValidatableResponse response = put(true, CategoryPaths.prefixWithSlash.value + nonExistingCategory, objectToJson_withoutNulls(getCategoryObject()), 404);
+        ValidatableResponse response = put(true, CategoryPaths.prefixWithSlash.value + nonExistingCategory, JsonUtil.objectToJson_withoutNulls(getCategoryObject()), 404);
         response
                 .body("status", equalTo("Error"))
                 .body("message", equalTo("Could not find record with id " + nonExistingCategory));
@@ -280,21 +281,21 @@ public class CategoryTests extends BaseTest{
 
     @Test
     void addCategory_negative_noToken() {
-        ValidatableResponse response = post(false, true, CategoryPaths.add.value, objectToJson_withoutNulls(getCategoryObject()), 403);
+        ValidatableResponse response = post(false, true, CategoryPaths.add.value, JsonUtil.objectToJson_withoutNulls(getCategoryObject()), 403);
         verifyNoTokenResponse(response, Constants.API_PREFIX + CategoryPaths.add.value);
     }
 
     @Test
     void deleteCategory_negative_noToken() {
-        int createdCatId = getIntFromJsonResponse(createCategory(getCategoryObject()), "$.id");
+        int createdCatId = JsonUtil.getIntFromJsonResponse(createCategory(getCategoryObject()), "$.id");
         ValidatableResponse response = delete(false, true,CategoryPaths.prefixWithSlash.value + createdCatId, 403);
         verifyNoTokenResponse(response, Constants.API_PREFIX + CategoryPaths.prefixWithSlash.value + createdCatId);
     }
 
     @Test
     void updateCategory_negative_noToken() {
-        int createdCatId = getIntFromJsonResponse(createCategory(getCategoryObject()), "$.id");
-        ValidatableResponse response = put(false, CategoryPaths.prefixWithSlash.value + createdCatId, objectToJson_withoutNulls(getCategoryObject()), 403);
+        int createdCatId = JsonUtil.getIntFromJsonResponse(createCategory(getCategoryObject()), "$.id");
+        ValidatableResponse response = put(false, CategoryPaths.prefixWithSlash.value + createdCatId, JsonUtil.objectToJson_withoutNulls(getCategoryObject()), 403);
         verifyNoTokenResponse(response, Constants.API_PREFIX + CategoryPaths.prefixWithSlash.value + createdCatId);
     }
 

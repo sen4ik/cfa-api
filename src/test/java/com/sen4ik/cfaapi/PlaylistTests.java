@@ -11,6 +11,7 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
+import org.sen4ik.utils.JsonUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
@@ -36,8 +37,8 @@ public class PlaylistTests extends BaseTest {
     @BeforeAll
     public void beforeAll(){
         ValidatableResponse r = addPlaylistAndVerify(false, nonAdminUserId);
-        testPlaylistId = getIntFromJsonResponse(r, "$.id");
-        testPlaylistName = getStringFromJsonResponse(r, "$.playlistName");
+        testPlaylistId = JsonUtil.getIntFromJsonResponse(r, "$.id");
+        testPlaylistName = JsonUtil.getStringFromJsonResponse(r, "$.playlistName");
     }
 
     @AfterAll
@@ -153,14 +154,14 @@ public class PlaylistTests extends BaseTest {
     @Test
     void addPlaylist_noToken() {
         Playlist p = getPlaylistObj();
-        ValidatableResponse response = post(false, null, PlaylistPaths.add.value, objectToJson_withoutNulls(p), 403);
+        ValidatableResponse response = post(false, null, PlaylistPaths.add.value, JsonUtil.objectToJson_withoutNulls(p), 403);
         verifyNoTokenResponse(response);
     }
 
     @Test
     void deletePlaylist_asAdmin() {
         ValidatableResponse response = addPlaylistAndVerify(true, adminUserId);
-        int playlistId = getIntFromJsonResponse(response, "$.id");
+        int playlistId = JsonUtil.getIntFromJsonResponse(response, "$.id");
         ValidatableResponse deleteResponse = delete(true, true, PlaylistPaths.prefixWithSlash.value + playlistId, 200);
         deleteResponse
                 .body("id", equalTo(playlistId))
@@ -170,7 +171,7 @@ public class PlaylistTests extends BaseTest {
     @Test
     void deletePlaylist_asUser() {
         ValidatableResponse response = addPlaylistAndVerify(false, nonAdminUserId);
-        int playlistId = getIntFromJsonResponse(response, "$.id");
+        int playlistId = JsonUtil.getIntFromJsonResponse(response, "$.id");
         ValidatableResponse deleteResponse = delete(true, false, PlaylistPaths.prefixWithSlash.value + playlistId, 200);
         deleteResponse
                 .body("id", equalTo(playlistId))
@@ -181,7 +182,7 @@ public class PlaylistTests extends BaseTest {
     void deleteSomeonesPlaylist_asUser() {
         // create playlist as admin role user
         ValidatableResponse response = addPlaylistAndVerify(true, adminUserId);
-        int playlistId = getIntFromJsonResponse(response, "$.id");
+        int playlistId = JsonUtil.getIntFromJsonResponse(response, "$.id");
         // delete playlist as user
         ValidatableResponse deleteResponse = delete(true, false, PlaylistPaths.prefixWithSlash.value + playlistId, 403);
         verifyForbiddenResponse(deleteResponse);
@@ -191,7 +192,7 @@ public class PlaylistTests extends BaseTest {
     void deleteSomeonesPlaylist_asAdmin() {
         // create playlist as user
         ValidatableResponse response = addPlaylistAndVerify(false, nonAdminUserId);
-        int playlistId = getIntFromJsonResponse(response, "$.id");
+        int playlistId = JsonUtil.getIntFromJsonResponse(response, "$.id");
         // delete playlist as admin role user
         ValidatableResponse deleteResponse = delete(true, true, PlaylistPaths.prefixWithSlash.value + playlistId, 403);
         verifyForbiddenResponse(deleteResponse);
@@ -200,7 +201,7 @@ public class PlaylistTests extends BaseTest {
     @Test
     void deletePlaylist_noToken() {
         ValidatableResponse response = addPlaylistAndVerify(false, nonAdminUserId);
-        int playlistId = getIntFromJsonResponse(response, "$.id");
+        int playlistId = JsonUtil.getIntFromJsonResponse(response, "$.id");
         ValidatableResponse deleteResponse = delete(false, null, PlaylistPaths.prefixWithSlash.value + playlistId, 403);
         verifyNoTokenResponse(deleteResponse);
     }
@@ -209,8 +210,8 @@ public class PlaylistTests extends BaseTest {
     void addFileToPlaylist_asUser() {
         // create playlist
         ValidatableResponse r = addPlaylistAndVerify(false, nonAdminUserId);
-        int playlistId = getIntFromJsonResponse(r, "$.id");
-        String playlistName = getStringFromJsonResponse(r, "$.playlistName");
+        int playlistId = JsonUtil.getIntFromJsonResponse(r, "$.id");
+        String playlistName = JsonUtil.getStringFromJsonResponse(r, "$.playlistName");
 
         // add file to playlist
         ValidatableResponse response = post(true, false, PlaylistPaths.prefixWithSlash.value + playlistId + "/file/" + 2, null,200);
@@ -291,8 +292,8 @@ public class PlaylistTests extends BaseTest {
     void deleteFileFromPlaylist() {
         // create playlist
         ValidatableResponse r = addPlaylistAndVerify(false, nonAdminUserId);
-        int playlistId = getIntFromJsonResponse(r, "$.id");
-        String playlistName = getStringFromJsonResponse(r, "$.playlistName");
+        int playlistId = JsonUtil.getIntFromJsonResponse(r, "$.id");
+        String playlistName = JsonUtil.getStringFromJsonResponse(r, "$.playlistName");
 
         // add file to playlist
         ValidatableResponse response = post(true, false, PlaylistPaths.prefixWithSlash.value + playlistId + "/file/" + 2, null,200);
@@ -302,7 +303,7 @@ public class PlaylistTests extends BaseTest {
                 .body("fileId", equalTo(2))
                 .body("file.id", equalTo(2))
                 .body("file.fileTitle", equalTo("О жизни молодежи"));
-        int playlistFileId = getIntFromJsonResponse(response, "$.playlistFileId");
+        int playlistFileId = JsonUtil.getIntFromJsonResponse(response, "$.playlistFileId");
 
         // verify file is in the playlist
         ValidatableResponse playlistResponse = get(true, false, PlaylistPaths.prefixWithSlash.value + playlistId, 200);
@@ -335,11 +336,11 @@ public class PlaylistTests extends BaseTest {
     void deleteFileFromPlaylistThatDoesNotBelongToTheUser() {
         // create playlist
         ValidatableResponse r = addPlaylistAndVerify(true, adminUserId);
-        int playlistId = getIntFromJsonResponse(r, "$.id");
+        int playlistId = JsonUtil.getIntFromJsonResponse(r, "$.id");
 
         // add file to playlist
         ValidatableResponse response = post(true, true, PlaylistPaths.prefixWithSlash.value + playlistId + "/file/" + 2, null,200);
-        int playlistFileId = getIntFromJsonResponse(response, "$.playlistFileId");
+        int playlistFileId = JsonUtil.getIntFromJsonResponse(response, "$.playlistFileId");
 
         ValidatableResponse deleteResponse = delete(true, false, PlaylistPaths.prefixWithSlash.value + "playlistFile/" + playlistFileId, 403);
         verifyForbiddenResponse(deleteResponse);
@@ -361,7 +362,7 @@ public class PlaylistTests extends BaseTest {
 
     private ValidatableResponse addPlaylistAndVerify(boolean isAdmin, int userIdToVerify){
         Playlist p = getPlaylistObj();
-        ValidatableResponse response = post(true, isAdmin, PlaylistPaths.add.value, objectToJson_withoutNulls(p), 200);
+        ValidatableResponse response = post(true, isAdmin, PlaylistPaths.add.value, JsonUtil.objectToJson_withoutNulls(p), 200);
         response
                 .body("id", isA(Integer.class))
                 .body("userId", equalTo(userIdToVerify))
