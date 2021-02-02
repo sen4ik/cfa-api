@@ -1,11 +1,6 @@
 package com.sen4ik.cfaapi;
 
 import com.github.javafaker.Faker;
-import com.google.common.collect.MapDifference;
-import com.google.common.collect.Maps;
-import com.google.gson.*;
-import com.google.gson.reflect.TypeToken;
-import com.jayway.jsonpath.JsonPath;
 import com.sen4ik.cfaapi.base.Constants;
 import com.sen4ik.cfaapi.enums.AuthPaths;
 import com.sen4ik.cfaapi.enums.ErrorMessagesCustom;
@@ -16,14 +11,11 @@ import io.restassured.response.ValidatableResponse;
 import io.restassured.specification.MultiPartSpecification;
 import io.restassured.specification.RequestSpecification;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.sen4ik.utils.JsonUtil;
 import org.sen4ik.utils.PropertiesFileUtil;
 
 import java.io.IOException;
-import java.lang.reflect.Type;
 import java.util.List;
-import java.util.Map;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.*;
@@ -214,13 +206,6 @@ public class BaseTest {
         return getAuthToken(username, password);
     }
 
-//    public String getStringFromJsonResponse(ValidatableResponse response, String jsonPath){
-//        String jsonBody = response.extract().asString();
-//        String str = JsonPath.read(jsonBody, jsonPath);
-//        log.info(jsonPath + ": " + str);
-//        return str;
-//    }
-
     public void verifyNoTokenResponse(ValidatableResponse response, String path){
         verifyNoTokenResponse(response, path, ErrorMessagesCustom.access_denied.value);
     }
@@ -235,71 +220,5 @@ public class BaseTest {
                 .body("message", equalTo(message))
                 .body("path", equalTo(path));
     }
-
-//    public String responseToJson(ValidatableResponse response){
-//        return response.extract().asString();
-//    }
-//
-//    public int getIntFromJsonResponse(ValidatableResponse response, String jsonPath){
-//        String jsonBody = response.extract().asString();
-//        return getIntFromJsonResponse(jsonBody, jsonPath);
-//    }
-//
-//    public int getIntFromJsonResponse(String json, String jsonPath){
-//        int i = JsonPath.read(json, jsonPath);
-//        log.info(jsonPath + ": " + i);
-//        return i;
-//    }
-//
-//    public static String objectToJson_withNulls(Object obj){
-//        Gson gson = new GsonBuilder().serializeNulls().create();
-//        String json = gson.toJson(obj);
-//        log.info("json: " + json);
-//        return json;
-//    }
-//
-//    public static String objectToJson_withoutNulls(Object obj){
-//        String json = new Gson().toJson(obj);
-//        log.info("json: " + json);
-//        return json;
-//    }
-//
-//    public static Object objectFromJson(String json, Class<?> cl){
-//        Gson gson = new Gson();
-//        return gson.fromJson(json, cl);
-//    }
-//
-//    private boolean compareResponseWithExpected(ValidatableResponse response, Object expectedObj){
-//        String json = response.extract().asString();
-//        Object resultObj = new Gson().fromJson(json, expectedObj.getClass());
-//        boolean result = EqualsBuilder.reflectionEquals(resultObj, expectedObj);
-//        return result;
-//    }
-//
-//    public JsonElement jsonToJsonElement(String json){
-//        JsonElement jsonElement =  new JsonParser().parse(json).getAsJsonArray();
-//        return jsonElement;
-//    }
-//
-//    public JsonElement objectToJsonElement(Object obj){
-//        return jsonToJsonElement(objectToJson_withNulls(obj));
-//    }
-//
-//    public boolean compare(ValidatableResponse response, Object obj){
-//        String json = response.extract().asString();
-//        JsonElement responseArray =  jsonToJsonElement(json);
-//        JsonElement expectedArray =   objectToJsonElement(obj);
-//        // assertEquals(responseArray, expectedArray);
-//        return responseArray.equals(expectedArray);
-//    }
-//
-//    public MapDifference<String, Object> compareTwoJsonsAndGetTheDifference(String json1, String json2) {
-//        Gson g = new Gson();
-//        Type mapType = new TypeToken<Map<String, Object>>(){}.getType();
-//        Map<String, Object> firstMap = g.fromJson(json1, mapType);
-//        Map<String, Object> secondMap = g.fromJson(json2, mapType);
-//        log.info(Maps.difference(firstMap, secondMap).toString());
-//        return Maps.difference(firstMap, secondMap);
-//    }
 
 }
